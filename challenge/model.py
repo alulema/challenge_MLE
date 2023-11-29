@@ -1,14 +1,14 @@
+import logging
 import numpy as np
 import pandas as pd
 import xgboost as xgb
 
 from typing import Tuple, Union, List
-
-from sklearn.model_selection import train_test_split
-from sklearn.utils import shuffle
-
 from challenge.delay_data_processor import DelayDataProcessor
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class DelayModel:
 
@@ -34,6 +34,7 @@ class DelayModel:
             or
             pd.DataFrame: features.
         """
+        logger.info("Starting data preprocessing")
 
         # Validate input parameters
         if not isinstance(data, pd.DataFrame):
@@ -54,6 +55,7 @@ class DelayModel:
             return features[DelayDataProcessor.TOP_10_FEATURES]
 
         target = data[[target_column]]
+        logger.info("Data preprocessing completed")
         return features[DelayDataProcessor.TOP_10_FEATURES], target
 
     def fit(
@@ -68,6 +70,8 @@ class DelayModel:
             features (pd.DataFrame): preprocessed data.
             target (pd.DataFrame): target.
         """
+        logger.info("Starting model training")
+
         n_y0 = len(target[target['delay'] == 0])
         n_y1 = len(target[target['delay'] == 1])
         scale = n_y0/n_y1
@@ -75,7 +79,7 @@ class DelayModel:
         self._model = xgb.XGBClassifier(random_state=1, learning_rate=0.01, scale_pos_weight = scale)
         self._model.fit(features, target)
 
-        return
+        logger.info("Model training completed")
 
     def predict(
         self,
@@ -90,5 +94,6 @@ class DelayModel:
         Returns:
             (List[int]): predicted targets.
         """
+        logger.info("Making predictions")
         predictions = self._model.predict(features)
         return list(map(int, predictions))
