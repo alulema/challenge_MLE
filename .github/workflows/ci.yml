@@ -1,0 +1,44 @@
+name: 'Continuous Integration'
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 .
+      - name: Security scan with bandit
+        run: |
+          pip install bandit
+          bandit -r .
+      - name: Check for vulnerabilities in dependencies
+        run: |
+          pip install pip-audit
+          pip-audit
+      - name: Run model tests
+        run: |
+          make model-test
+      - name: Run API tests
+        run: |
+          make api-test
+      - name: Run stress tests
+        run: |
+          make stress-test
+      - name: Build Docker Image
+        run: |
+          docker build -t flight-delay-predictor-api .
+    

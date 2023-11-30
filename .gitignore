@@ -1,1 +1,7 @@
 .idea/
+reports/
+.coverage
+*.pyc
+__pycache__/
+.elasticbeanstalk/
+*.joblib
