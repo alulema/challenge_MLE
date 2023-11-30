@@ -1,9 +1,11 @@
 name: Continuous Deployment
 
-# This CD workflow is triggered on push events to the main branch
+# This CD workflow is triggered only when the CI workflow completes successfully
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types:
+      - completed
 
 jobs:
   deploy:
