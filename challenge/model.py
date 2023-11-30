@@ -4,11 +4,13 @@ import pandas as pd
 import xgboost as xgb
 
 from typing import Tuple, Union, List
-from challenge.delay_data_processor import DelayDataProcessor
+from challenge.utils.delay_data_processor import DelayDataProcessor
+from challenge.utils.exceptions import InvalidMonthValueException, InvalidTipoVueloValueException
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class DelayModel:
 
@@ -40,10 +42,13 @@ class DelayModel:
         if not isinstance(data, pd.DataFrame):
             raise ValueError("Input data must be a pandas DataFrame.")
 
-        data['period_day'] = data['Fecha-I'].apply(DelayDataProcessor.get_period_day)
-        data['high_season'] = data['Fecha-I'].apply(DelayDataProcessor.is_high_season)
-        data['min_diff'] = data.apply(DelayDataProcessor.get_min_diff, axis=1)
-        data['delay'] = np.where(data['min_diff'] > DelayDataProcessor.THRESHOLD_IN_MINUTES, 1, 0)
+        if 'MES' in data.columns:
+            invalid_months = data['MES'].apply(lambda x: x < 1 or x > 12)
+            if invalid_months.any():
+                raise InvalidMonthValueException("Invalid 'MES' value detected in features")
+
+        if 'TIPOVUELO' in data.columns and not all(data['TIPOVUELO'].isin(['N', 'I'])):
+            raise InvalidTipoVueloValueException("Invalid 'TIPOVUELO' value detected in data")
 
         features = pd.concat([
             pd.get_dummies(data['OPERA'], prefix='OPERA'),
@@ -51,8 +56,17 @@ class DelayModel:
             pd.get_dummies(data['MES'], prefix='MES')
         ], axis=1)
 
+        for col in DelayDataProcessor.TOP_10_FEATURES:
+            if col not in features.columns:
+                features[col] = 0
+
         if target_column is None:
             return features[DelayDataProcessor.TOP_10_FEATURES]
+
+        data['period_day'] = data['Fecha-I'].apply(DelayDataProcessor.get_period_day)
+        data['high_season'] = data['Fecha-I'].apply(DelayDataProcessor.is_high_season)
+        data['min_diff'] = data.apply(DelayDataProcessor.get_min_diff, axis=1)
+        data['delay'] = np.where(data['min_diff'] > DelayDataProcessor.THRESHOLD_IN_MINUTES, 1, 0)
 
         target = data[[target_column]]
         logger.info("Data preprocessing completed")
