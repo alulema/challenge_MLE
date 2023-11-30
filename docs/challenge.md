@@ -107,3 +107,47 @@ layers for handling API routes, service logic, and exception handling.
 the flexibility and testability of the code.
 - **Scalability and Maintainability:** The architectural choices and code organization strategies are geared towards
 scalability and ease of maintenance, setting a solid foundation for future enhancements and expansions of the API.
+
+## API Deployment and Optimization
+
+### Deployment to AWS Elastic Beanstalk
+
+#### Process Overview
+The FastAPI application was containerized using Docker and deployed to AWS Elastic Beanstalk.
+
+#### Key Steps
+
+1. **Dockerization:** The application was packaged into a Docker container, which included all the necessary dependencies
+and configurations.
+
+2. **Elastic Beanstalk Configuration:**
+
+   * An Elastic Beanstalk environment was set up to host the Docker container.
+   * Configuration parameters, such as instance type, were adjusted to suit the application's needs.
+
+3. **Deployment:**
+
+   * The Docker container was deployed to the Elastic Beanstalk environment.
+   * The application was made accessible via a URL provided by Elastic Beanstalk.
+
+4. **Verification:** Post-deployment, the application was tested to ensure it was running correctly and accessible.
+
+### ModelService Optimization
+
+#### Saving and Loading Model
+
+To enhance efficiency, the `ModelService` was optimized to save the trained model to a file using `joblib`. This approach
+prevents the model from being retrained on every API call.
+
+#### Implementation Details
+
+* **Model Serialization:** The trained model is now serialized to a file upon the first training. If the saved model file
+exists, it is loaded directly, bypassing the training process.
+* **Joblib Integration:** The joblib library was used for model serialization due to its efficiency with large NumPy arrays,
+which are common in machine learning models.
+
+### Stress Testing
+Post-deployment, stress tests were conducted to assess the application's performance under load. The application demonstrated:
+
+* Stability: Consistent performance without significant degradation under simulated load.
+* Responsiveness: Maintained acceptable response times throughout the testing period.
