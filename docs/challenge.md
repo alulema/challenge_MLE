@@ -1,8 +1,15 @@
-Why did you select the model?
+## Model Selection and Implementation
 
-Based on the metrics, I selected **XGBoost model trained with the top 10 columns chosen by feature importance, with balance**. Here my reasons:
+### Model Selection: XGBoost with Top 10 Features and Class Balance
 
-**Class Imbalance Handling:** The initial dataset is imbalanced, which generates a bias in favor of class 0.
+#### Reason for Selection
+
+The chosen model is an XGBoost model trained with the top 10 features identified by feature importance, and with class
+balance. The decision is based on the following considerations:
+
+1. **Class Imbalance Handling**
+
+    The dataset exhibited a significant class imbalance, favoring class 0. The imbalance ratios were as follows:
 
 ```python
 y_train.value_counts('%')*100
@@ -16,11 +23,14 @@ y_test.value_counts('%')*100
 1    18.722232
 ```
 
-Even if we consider that the majority class is 0, the dataset is biased, and this is something that we must try to avoid. The balanced
-XGBoost model addresses this issue by adjusting the weight of classes, which is crucial for achieving fair representation and performance across both classes.
+To counteract this bias, the balanced XGBoost model adjusts the weight of classes, ensuring fair representation and more
+accurate performance across both classes.
 
-**Improved recall for minority class:** The model significantly improves the recall for class 1 (69%) vs the other imbalanced models,
-although this improvement comes at the cost of a lower precision for class 1 (52%), but considering the flight delays, it could be important to detect both cases.
+2. **Improved Recall for Minority Class**
+
+   The balanced model demonstrated a substantial improvement in recall for class 1 (69%), essential for identifying delayed
+flights. While this improvement impacted precision for class 1 (reducing it to 52%), the trade-off was deemed acceptable
+considering the importance of accurately detecting delays.
 
 ```python
 classification_report(y_test2, xgboost_y_preds_2)
@@ -33,12 +43,67 @@ classification_report(y_test2, xgboost_y_preds_2)
     accuracy                           0.55     22508
    macro avg       0.56      0.61      0.51     22508
 weighted avg       0.76      0.55      0.60     22508
-
 ```
 
-**Feature Importance-Base Model Simplification:** Using the top 10 features based on feature importance
-can lead to a simpler, more interpretable model. It also reduces the risk of overfitting by eliminating
-less important features, and captures the necessary patterns from the more closely related information.
+3. **Feature Importance-Based Model Simplification**
 
-**Good metrics, in average:** Although the metrics look to lost precision in some cases, the model has a good performance in average,
-and it is important to have a fair representation of both classes.
+   Utilizing only the top 10 features allows for a simpler, more interpretable model. This approach effectively captures
+essential patterns with the most relevant information, reducing the risk of overfitting.
+
+4. **Balanced Metrics**
+
+   The model presents a balanced performance, offering a fair representation of both classes. This balance is crucial in
+scenarios where both precision and recall are important.
+
+## Model Deployment with FastAPI
+
+The API's architecture has been structured to include middleware, services, and a comprehensive exception handling mechanism.
+This organization enhances the modularity and readability of the code, making it more maintainable and scalable for future developments.
+
+### Middleware and Exception Handling
+
+**Exception Handling:** A robust exception handling mechanism has been implemented. Custom exception handlers have been
+integrated to manage specific validation errors and custom exceptions related to business logic. This centralizes error
+management, providing clearer error messages and improving the API's robustness.
+
+**Service Layer:** The `ModelService` class encapsulates operations related to the `DelayModel`, including model initialization
+and predictions. This service abstraction separates the model logic from the API routes, adhering to the Single Responsibility
+Principle and enhancing the code's organization.
+
+### Features and Functionalities
+
+#### Model Initialization
+
+**Automatic Model Initialization:** The ModelService class automatically initializes the `DelayModel` upon instantiation.
+This involves loading data from a CSV file, preprocessing the data, and fitting the model.
+
+**Data Loading:** Data for model initialization is loaded dynamically using the `Pathlib` and `glob` modules. This ensures
+flexibility in file locations and enhances the API's adaptability to different deployment environments.
+
+#### Prediction Endpoint
+
+**Predictions:** The API includes a `/predict` endpoint that leverages the `ModelService` to make predictions. This endpoint
+accepts a list of flights as input, processes the data, and returns predictions.
+
+#### Request and Response Structure
+
+**PredictionRequest DTO:** A Data Transfer Object (DTO), `PredictionRequest`, has been defined using Pydantic's `BaseModel`.
+This DTO specifies the structure of the incoming prediction request, which includes a list of flights, each represented
+as a dictionary.
+
+### Custom Exception Handlers
+
+- **ValidationError Handler:** Catches and handles validation errors arising from DTOs.
+- **InvalidMonthValueException Handler:** Handles errors related to invalid 'MES' values in flight data.
+- **InvalidTipoVueloValueException Handler:** Manages errors associated with incorrect 'TIPOVUELO' values.
+- **General Exception Handler:** A catch-all handler for any other unanticipated exceptions, ensuring a graceful response
+to unexpected issues.
+
+### Code Organization and Best Practices
+
+- **Separation of Concerns:** The application's structure adheres to the principle of separation of concerns, with distinct
+layers for handling API routes, service logic, and exception handling.
+- **Dependency Injection:** FastAPI's dependency injection system is used to manage instances of `ModelService`, enhancing
+the flexibility and testability of the code.
+- **Scalability and Maintainability:** The architectural choices and code organization strategies are geared towards
+scalability and ease of maintenance, setting a solid foundation for future enhancements and expansions of the API.
