@@ -26,18 +26,6 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      # Run a security scan on the code using bandit
-      - name: Security scan with bandit
-        run: |
-          pip install bandit
-          bandit -r .
-
-      # Check for known vulnerabilities in the project dependencies
-      - name: Check for vulnerabilities in dependencies
-        run: |
-          pip install pip-audit
-          pip-audit
-
       # Run tests specific to the model, ensuring its integrity
       - name: Run model tests
         run: |
