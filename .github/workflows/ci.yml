@@ -25,6 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+          pip install pytest locust
 
       # Run tests specific to the model, ensuring its integrity
       - name: Run model tests
