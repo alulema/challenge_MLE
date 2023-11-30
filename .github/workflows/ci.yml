@@ -1,44 +1,65 @@
 name: 'Continuous Integration'
 
+# This CI workflow is triggered on push or pull request events to the main branch
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Specifies that the job should run on the latest Ubuntu runner
+
     steps:
-      - uses: actions/checkout@v2
+      # Checkout the code in the GitHub repository
+      - uses: actions/checkout@v4
+
+      # Set up the specified Python version
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
+
+      # Install the project dependencies from requirements.txt
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+
+      # Perform linting with flake8 to ensure code quality
       - name: Lint with flake8
         run: |
           pip install flake8
           flake8 .
+
+      # Run a security scan on the code using bandit
       - name: Security scan with bandit
         run: |
           pip install bandit
           bandit -r .
+
+      # Check for known vulnerabilities in the project dependencies
       - name: Check for vulnerabilities in dependencies
         run: |
           pip install pip-audit
           pip-audit
+
+      # Run tests specific to the model, ensuring its integrity
       - name: Run model tests
         run: |
           make model-test
+
+      # Run API tests to verify the correct functioning of API endpoints
       - name: Run API tests
         run: |
           make api-test
+
+      # Perform stress tests to evaluate the API's performance under heavy load
       - name: Run stress tests
         run: |
           make stress-test
+
+      # Build a Docker image to ensure that the application is correctly containerized
       - name: Build Docker Image
         run: |
           docker build -t flight-delay-predictor-api .
-    
