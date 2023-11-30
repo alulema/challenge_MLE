@@ -1,3 +1,19 @@
+# Flight Delay Predictor API: Development and Deployment Documentation
+
+## Introduction
+
+This document provides a comprehensive overview of the development, deployment, and continuous improvement processes for
+the Flight Delay Predictor API. The API, built using FastAPI and hosted on AWS Elastic Beanstalk, is designed to predict
+flight delays based on various input parameters. The document details the model selection, API architecture, optimization
+strategies, and the implementation of Continuous Integration (CI) and Continuous Deployment (CD) workflows.
+
+## Objective
+
+The primary objective of this documentation is to offer insights into the technical decisions, architectural design, and
+deployment strategies that were employed to create a robust and scalable Flight Delay Predictor API. It serves as a guide
+and reference for understanding the project's lifecycle, from model selection and API development to its deployment and
+continuous enhancement through automated CI/CD pipelines.
+
 ## Model Selection and Implementation
 
 ### Model Selection: XGBoost with Top 10 Features and Class Balance
@@ -29,7 +45,7 @@ accurate performance across both classes.
 2. **Improved Recall for Minority Class**
 
    The balanced model demonstrated a substantial improvement in recall for class 1 (69%), essential for identifying delayed
-flights. While this improvement impacted precision for class 1 (reducing it to 52%), the trade-off was deemed acceptable
+flights. While this improvement impacted precision for class 0 (reducing it to 52%), the trade-off was deemed acceptable
 considering the importance of accurately detecting delays.
 
 ```python
@@ -151,3 +167,80 @@ Post-deployment, stress tests were conducted to assess the application's perform
 
 * Stability: Consistent performance without significant degradation under simulated load.
 * Responsiveness: Maintained acceptable response times throughout the testing period.
+
+## Continuous Integration and Continuous Deployment (CI/CD)
+
+### Continuous Integration (CI)
+
+#### Workflow Setup
+
+The CI workflow (`ci.yml`) is triggered on every push and pull request to the main branch. It performs several checks and
+tests to ensure code quality and functionality:
+
+* **Environment Setup:** The workflow runs on the latest Ubuntu runner with Python 3.8.
+* **Dependency Installation:** Installs all necessary dependencies from requirements.txt and additional tools like pytest,
+pytest-cov, and locust.
+* **Testing:**
+
+  * **Model Tests:** Runs model-specific tests (`make model-test`).
+  * **API Tests:** Executes tests for the API functionality (`make api-test`).
+  * **Stress Tests:** Conducts stress tests to assess the API's performance under load (`make stress-test`).
+
+* Docker Image Build: Builds a Docker image of the application to ensure it's correctly containerized.
+
+#### Benefits
+
+* Ensures code quality and functionality before merging into the main branch.
+* Automates the testing process, reducing manual effort and the potential for human error.
+
+### Continuous Deployment (CD)
+
+#### Workflow Setup
+
+The CD workflow (`cd.yml`) is triggered only after the CI workflow completes successfully. It automates the deployment of
+the application to AWS Elastic Beanstalk:
+
+* **Dependency and Tool Installation:** Installs the AWS CLI, necessary for AWS interactions.
+* **AWS Credentials Configuration:** Securely configures AWS credentials using GitHub Secrets.
+* **Application Packaging:** Packages the application into a ZIP file for deployment.
+* **S3 Upload:** Uploads the ZIP file to a specified S3 bucket.
+* **Elastic Beanstalk Deployment:**
+
+   * **Create Application Version:** Creates a new version of the application on Elastic Beanstalk using the ZIP file from
+S3. The version label is dynamically generated using the Git commit hash (`${{ github.sha }}`) for uniqueness.
+   * **Update Environment:** Updates the Elastic Beanstalk environment to use the new application version.
+
+#### Benefits
+* Automates the deployment process, ensuring new changes are deployed efficiently and consistently.
+* Uses a unique versioning system (using Git commit hash) to keep track of deployments and facilitate rollbacks if needed.
+
+## Conclusion
+
+The development and deployment of the Flight Delay Predictor API represent a significant achievement in applying machine
+learning to real-world problems. Throughout the project, a strong focus was maintained on not only selecting the most
+effective predictive model but also on ensuring that the API is robust, scalable, and easily maintainable.
+
+### Key Accomplishments
+
+- **Effective Model Selection and Optimization:** The choice of the XGBoost model, balanced for class representation and
+based on the most significant features, demonstrates a thoughtful approach to handling real-world data imbalances and
+complexities.
+
+- **Robust API Design and Implementation:** The use of FastAPI, a modern, fast framework for building APIs, along with a
+well-structured codebase, sets a solid foundation for future scalability and enhancements.
+
+- **Successful Deployment to AWS Elastic Beanstalk:** Leveraging AWS services for deployment ensured high availability
+and reliability of the API, making it accessible for real-time flight delay predictions.
+
+- **Automated CI/CD Workflows:** The implementation of Continuous Integration and Continuous Deployment using GitHub
+Actions exemplifies best practices in software development, ensuring code quality and facilitating seamless updates to
+the application.
+
+### Future Outlook
+
+Looking ahead, the project is well-positioned for further enhancements, such as incorporating additional data sources,
+implementing more complex machine learning algorithms, or expanding the API's functionality. The successful establishment
+of CI/CD pipelines also ensures that future updates and improvements can be efficiently integrated, tested, and deployed.
+
+In conclusion, the Flight Delay Predictor API project stands as a testament to the effective application of technology in
+solving practical challenges and lays a strong foundation for continuous improvement and adaptation to evolving requirements.
